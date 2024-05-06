@@ -3,24 +3,24 @@ import TopBar from "../Components/Message/TopBar";
 import Conversation from "../Components/Message/Conversation";
 import SubmitMessage from "../Components/Message/SubmitMessage";
 import { useEffect, useState } from "react";
-import Stomp from "stompjs";
-import SockJS from "sockjs-client";
+// import WebSocketService from "../utils/websocketConfig";s
 export default function Message() {
+
   const { chatId } = useParams();
   useEffect(() => {
-    const socket = new SockJS("http://localhost:8080/chat-socket");
-    const client = Stomp.over(socket);
-
-    client.connect({}, () => {
-      client.subscribe("/topic/messages", (message) => {
-        const receivedMessage = JSON.parse(message.body);
-      });
-    });
-
-    return () => {
-      client.disconnect();
+    const socket = new WebSocket('ws://localhost:8080/ws');
+    socket.onopen = () => {
+      console.log('WebSocket connection established.');
     };
-  }, []);
+    
+    socket.onmessage = (event) => {
+      console.log('Received message:', event.data);
+    };
+    
+    socket.onclose = () => {
+      console.log('WebSocket connection closed.');
+    };
+  })
   return (
     <>
       <div className="w-screen h-screen flex flex-col justify-between items-stretch relative">
