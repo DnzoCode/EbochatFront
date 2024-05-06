@@ -1,22 +1,30 @@
-import {create} from "zustand"
-import { IUser } from "../utils/interfaces/IUser";
+import { create } from "zustand";
+import axiosInstance from "../utils/axios";
 
 interface AuthState {
-    token: string | null;
-    user: IUser | null;
-    login: (username: string, password: string) => Promise<void>;
-  }
+  token: string | null;
+  username: string | null;
+  userId: number | null;
+  login: (username: string, password: string) => Promise<void>;
+}
 export const useAuthStore = create<AuthState>((set) => ({
-    token: null,
-    user: null,
-    login: async (username: string, password: string) => {
-        try {
-            // const response = await axios.post<AuthResponse>('https://tu-api.com/login', { username, password });
-            // const { token, user } = response.data;
-            // set({ token, user });
-        } catch (error) {
-            console.error('Error al iniciar sesión:', error.message);
-            throw new Error('Inicio de sesión fallido');
-        }
-    },
-}))
+  token: localStorage.getItem("token") || null,
+  username: localStorage.getItem("username") || null,
+  userId: localStorage.getItem("userId")
+    ? parseInt(localStorage.getItem("userId")!)
+    : null,
+  login: async (username: string, password: string) => {
+    await axiosInstance
+      .post("auth/login", { username, password })
+      .then((response) => {
+        const { token, username, userId } = response.data;
+        set({ token, username, userId });
+        localStorage.setItem("token", token);
+        localStorage.setItem("username", username); // Guardar el username en localStorage
+        localStorage.setItem("userId", userId.toString()); // Guardar el userId en localStorage
+      })
+      .catch((error) => {
+        throw new Error("Inicio de sesión fallido");
+      });
+  },
+}));
